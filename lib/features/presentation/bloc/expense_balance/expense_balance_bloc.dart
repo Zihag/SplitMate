@@ -110,10 +110,16 @@ class ExpenseBalanceBloc extends Bloc<ExpenseBalanceEvent, ExpenseBalanceState> 
       ExpenseSetCheckpointEvent event,
       Emitter<ExpenseBalanceState> emit,
       ) async {
-    await firestore
-        .collection('expenses')
-        .doc(event.expenseId)
-        .update({'isCheckPoint': true});
+    final docRef = firestore.collection('expenses').doc(event.expenseId);
+    final snapshot = await docRef.get();
+
+    final currentValue = snapshot.data()?['isCheckPoint'];
+
+    final newValue = !(currentValue == true); // nếu là true → false, ngược lại → true
+
+    await docRef.update({'isCheckPoint': newValue});
+
     add(ExpenseLoadBalancesEvent());
   }
+
 }

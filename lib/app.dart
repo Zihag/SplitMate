@@ -56,7 +56,8 @@ class _AppState extends State<App> {
         debugShowCheckedModeBanner: false,
         title: 'SplitMate',
         theme: ThemeData(
-          primarySwatch: Colors.indigo,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan), // màu chủ đạo
+          useMaterial3: true, // nếu dùng Material 3
         ),
         home: FutureBuilder<bool>(
           future: _isLoggedIn(),
@@ -73,6 +74,7 @@ class _AppState extends State<App> {
           },
         ),
         routes: {
+          '/sign-in': (_) => const SignInScreen(),
           '/home': (_) => const HomeScreen(),
           '/add-expense': (_) => const AddExpenseScreen(),
         },

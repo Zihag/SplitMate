@@ -14,7 +14,6 @@ class AddExpenseScreen extends StatefulWidget {
 }
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
-
   final User currentUser = FirebaseAuth.instance.currentUser!;
 
   final _amountController = TextEditingController();
@@ -36,7 +35,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Future<void> _fetchUsers() async {
     final snapshot = await FirebaseFirestore.instance.collection('users').get();
     setState(() {
-      allUsers = snapshot.docs.map((doc){
+      allUsers = snapshot.docs.map((doc) {
         final data = doc.data();
         return UserInfoModel.fromMap(data);
       }).toList();
@@ -45,16 +44,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Expense')),
+      appBar: AppBar(title: const Text('Thêm chi tiêu')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: BlocConsumer<ExpenseBloc, ExpenseState>(
           listener: (context, state) {
             if (state is ExpenseAddedSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Expense added')),
+                const SnackBar(content: Text('Đã thêm chi tiêu')),
               );
               context.read<ExpenseBloc>().add(GetExpensesEvent());
               Navigator.pop(context);
@@ -75,14 +73,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         controller: _amountController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                          labelText: 'Enter amount',
+                          labelText: 'Số tiền',
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () {
-                        final input = int.tryParse(_amountController.text.trim());
+                        final input =
+                            int.tryParse(_amountController.text.trim());
                         if (input != null && input > 0) {
                           setState(() {
                             _runningTotal += input;
@@ -90,22 +89,27 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           });
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Enter a valid number')),
+                            const SnackBar(
+                                content: Text('Nhập đúng số tiền')),
                           );
                         }
                       },
                       child: const Icon(Icons.add),
                     ),
-                    ElevatedButton(onPressed: (){
-                      setState(() {
-                        _runningTotal = 0;
-                      });
-                    }, child: Icon(Icons.delete))
+                    ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _runningTotal = 0;
+                          });
+                        },
+                        child: Icon(Icons.delete))
                   ],
                 ),
-                SizedBox(height: 20,),
+                SizedBox(
+                  height: 20,
+                ),
                 Text(
-                  'Total: ₫$_runningTotal',
+                  'Tổng: ₫$_runningTotal',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -113,22 +117,27 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ),
                 TextField(
                   controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
+                  decoration: const InputDecoration(labelText: 'Mô tả'),
                 ),
-               SizedBox(height: 40,),
-               Text('Participants'),
-                Expanded(child: ListView.builder(
+                SizedBox(
+                  height: 40,
+                ),
+                Text('Người tham gia'),
+                Expanded(
+                    child: ListView.builder(
                   itemCount: allUsers.length,
-                  itemBuilder: (context,index){
+                  itemBuilder: (context, index) {
                     final user = allUsers[index];
                     final isSelected = selectedUsers.contains(user.displayName);
 
                     return CheckboxListTile(
-                      title: currentUser.uid == user.uid ? Text('Bạn') : Text(user.displayName),
+                      title: currentUser.uid == user.uid
+                          ? Text('Bạn')
+                          : Text(user.displayName),
                       value: isSelected,
-                      onChanged: (bool? value){
+                      onChanged: (bool? value) {
                         setState(() {
-                          if(value == true){
+                          if (value == true) {
                             selectedUsers.add(user.displayName);
                           } else {
                             selectedUsers.remove(user.displayName);
@@ -138,25 +147,43 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     );
                   },
                 )),
-
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: isLoading
                       ? null
                       : () {
-                    final total = _runningTotal;
-                    final description = _descriptionController.text.trim();
+                          final total = _runningTotal;
+                          final description =
+                              _descriptionController.text.trim();
 
+                          // 🔴 Kiểm tra điều kiện trước khi tạo
+                          if (total == 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Vui lòng nhập số tiền hợp lệ')),
+                            );
+                            return;
+                          }
 
-                    context.read<ExpenseBloc>().add(AddExpenseEvent(
-                      amount: total,
-                      description: description,
-                      participants: selectedUsers,
-                    ));
-                  },
+                          if (selectedUsers.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Chọn ít nhất một người tham gia')),
+                            );
+                            return;
+                          }
+
+                          context.read<ExpenseBloc>().add(AddExpenseEvent(
+                                amount: total,
+                                description: description,
+                                participants: selectedUsers,
+                              ));
+                        },
                   child: isLoading
                       ? const CircularProgressIndicator()
-                      : const Text('Add Expense'),
+                      : const Text('Thêm chi tiêu'),
                 ),
               ],
             );
